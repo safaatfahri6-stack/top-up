@@ -8,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   balance: number;
   transactions: Transaction[];
-  login: () => void;
+  login: (user?: Partial<User>) => void;
   logout: () => void;
   addTopUp: (amount: number) => Promise<void>;
 }
@@ -24,8 +24,8 @@ const mockUser: User = {
 };
 
 const mockInitialTransactions: Transaction[] = [
-    { id: 'txn_1', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), amount: 50000, status: 'Success' },
-    { id: 'txn_2', date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), amount: 100000, status: 'Success' },
+  { id: 'txn_1', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), amount: 50000, status: 'Success' },
+  { id: 'txn_2', date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), amount: 100000, status: 'Success' },
 ];
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -33,8 +33,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [balance, setBalance] = useState<number>(250000);
   const [transactions, setTransactions] = useState<Transaction[]>(mockInitialTransactions);
 
-  const login = useCallback(() => {
-    setUser(mockUser);
+  const login = useCallback((userData?: Partial<User>) => {
+    if (userData) {
+      setUser({
+        name: userData.name || mockUser.name,
+        email: userData.email || mockUser.email,
+        picture: userData.picture || mockUser.picture,
+      });
+    } else {
+      setUser(mockUser);
+    }
   }, []);
 
   const logout = useCallback(() => {
@@ -43,17 +51,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const addTopUp = useCallback((amount: number): Promise<void> => {
     return new Promise(resolve => {
-        setTimeout(() => {
-            setBalance(prevBalance => prevBalance + amount);
-            const newTransaction: Transaction = {
-                id: `txn_${Date.now()}`,
-                date: new Date(),
-                amount: amount,
-                status: 'Success',
-            };
-            setTransactions(prev => [newTransaction, ...prev]);
-            resolve();
-        }, 1500); // Simulate network delay
+      setTimeout(() => {
+        setBalance(prevBalance => prevBalance + amount);
+        const newTransaction: Transaction = {
+          id: `txn_${Date.now()}`,
+          date: new Date(),
+          amount: amount,
+          status: 'Success',
+        };
+        setTransactions(prev => [newTransaction, ...prev]);
+        resolve();
+      }, 1500); // Simulate network delay
     });
   }, []);
 
